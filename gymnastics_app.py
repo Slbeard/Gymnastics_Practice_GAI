@@ -33,7 +33,7 @@ if st.button("Send") and user_input:
         "https://api.openai.com/v1/chat/completions",
         headers=HEADERS,
         json={
-            "model": gpt-3.5-turbo-0125,
+            "model": "gpt-3.5-turbo-0125",
             "messages": st.session_state["messages"]
         }
     )
