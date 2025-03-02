@@ -5,9 +5,10 @@ import json
 # OpenAI API Key (Keep it secure)
 API_KEY = "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"
 HEADERS = {
-    "Authorization": f"Bearer {API_KEY}"}
+    "Authorization": f"Bearer {API_KEY}",
+    "Content-Type": "application/json"
+}
 
-# Replace with your fine-tuned model ID
 FINE_TUNED_MODEL = "ft:gpt-3.5-turbo-0125:personal::B6kk1I2j"
 
 st.title("Fine-Tuned GPT Chatbot 🤖")
@@ -22,10 +23,9 @@ for msg in st.session_state["messages"]:
     st.markdown(f"**{role}:** {msg['content']}")
 
 # User input
-user_input = st.text_input("You:", "")
+user_input = st.chat_input("You:")
 
-if st.button("Send") and user_input:
-    # Append user input to chat history
+if user_input:
     st.session_state["messages"].append({"role": "user", "content": user_input})
 
     # Call OpenAI API
@@ -33,7 +33,7 @@ if st.button("Send") and user_input:
         "https://api.openai.com/v1/chat/completions",
         headers=HEADERS,
         json={
-            "model": "gpt-3.5-turbo-0125",
+            "model": FINE_TUNED_MODEL,
             "messages": st.session_state["messages"]
         }
     )
@@ -44,4 +44,5 @@ if st.button("Send") and user_input:
         st.session_state["messages"].append({"role": "assistant", "content": assistant_reply})
         st.experimental_rerun()
     else:
+        st.error(f"Error: {response.status_code} - {response.text}")
         st.error("Error communicating with OpenAI API. Check your API key and model ID.")
