@@ -3,7 +3,7 @@ import requests
 import json
 
 # OpenAI API Key (Keep it secure)
-API_KEY = secrets.GPT_SECRET
+API_KEY = "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"
 HEADERS = {
     "Authorization": f"Bearer {API_KEY}",
     "Content-Type": "application/json"
