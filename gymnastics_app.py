@@ -5,9 +5,7 @@ import json
 # OpenAI API Key (Keep it secure)
 API_KEY = "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"
 HEADERS = {
-    "Authorization": f"Bearer {API_KEY}",
-    "Content-Type": "application/json"
-}
+    "Authorization": f"Bearer {API_KEY}"}
 
 # Replace with your fine-tuned model ID
 FINE_TUNED_MODEL = "ft:gpt-3.5-turbo-0125:personal::B6kk1I2j"
@@ -35,7 +33,7 @@ if st.button("Send") and user_input:
         "https://api.openai.com/v1/chat/completions",
         headers=HEADERS,
         json={
-            "model": FINE_TUNED_MODEL,
+            "model": gpt-3.5-turbo-0125,
             "messages": st.session_state["messages"]
         }
     )
