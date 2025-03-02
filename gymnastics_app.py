@@ -1,76 +1,49 @@
 import streamlit as st
 import requests
 import json
-import time
 
-# OpenAI API Key (Set this securely)
-API_KEY = "your_openai_api_key"
+# OpenAI API Key (Keep it secure)
+API_KEY = secrets.GPT_SECRET
 HEADERS = {
     "Authorization": f"Bearer {API_KEY}",
     "Content-Type": "application/json"
 }
 
-st.title("GPT Fine-Tuning Dashboard")
+# Replace with your fine-tuned model ID
+FINE_TUNED_MODEL = "ft:gpt-3.5-turbo-0125:personal::B6kk1I2j"
 
-# Upload training file
-uploaded_file = st.file_uploader("Upload JSONL Training File", type="jsonl")
+st.title("Fine-Tuned GPT Chatbot 🤖")
 
-if uploaded_file:
-    st.write("File uploaded successfully!")
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
 
-    # Save the uploaded file temporarily
-    with open("temp_training_file.jsonl", "wb") as f:
-        f.write(uploaded_file.getbuffer())
+# Display chat history
+for msg in st.session_state["messages"]:
+    role = "🤖" if msg["role"] == "assistant" else "🧑"
+    st.markdown(f"**{role}:** {msg['content']}")
 
-    # Upload to OpenAI
-    st.write("Uploading to OpenAI...")
-    upload_response = requests.post(
-        "https://api.openai.com/v1/files",
+# User input
+user_input = st.text_input("You:", "")
+
+if st.button("Send") and user_input:
+    # Append user input to chat history
+    st.session_state["messages"].append({"role": "user", "content": user_input})
+
+    # Call OpenAI API
+    response = requests.post(
+        "https://api.openai.com/v1/chat/completions",
         headers=HEADERS,
-        files={"file": open("temp_training_file.jsonl", "rb")},
-        data={"purpose": "fine-tune"}
+        json={
+            "model": FINE_TUNED_MODEL,
+            "messages": st.session_state["messages"]
+        }
     )
 
-    if upload_response.status_code == 200:
-        file_id = upload_response.json()["id"]
-        st.success(f"File uploaded! File ID: {file_id}")
-
-        # Fine-tune the model
-        st.write("Starting fine-tuning...")
-        fine_tune_data = {
-            "training_file": file_id,
-            "model": "gpt-3.5-turbo",
-            "hyperparameters": {"n_epochs": 4}
-        }
-        fine_tune_response = requests.post(
-            "https://api.openai.com/v1/fine_tuning/jobs",
-            headers=HEADERS,
-            json=fine_tune_data
-        )
-
-        if fine_tune_response.status_code == 200:
-            fine_tune_job_id = fine_tune_response.json()["id"]
-            st.success(f"Fine-tuning started! Job ID: {fine_tune_job_id}")
-
-            # Poll for status updates
-            st.write("Tracking job progress...")
-            while True:
-                job_status = requests.get(
-                    f"https://api.openai.com/v1/fine_tuning/jobs/{fine_tune_job_id}",
-                    headers=HEADERS
-                ).json()
-
-                st.write(f"Status: {job_status['status']}")
-                
-                if job_status["status"] in ["succeeded", "failed"]:
-                    break
-                
-                time.sleep(10)  # Wait before checking again
-            
-            st.success("Fine-tuning complete!")
-        else:
-            st.error("Failed to start fine-tuning.")
+    # Process response
+    if response.status_code == 200:
+        assistant_reply = response.json()["choices"][0]["message"]["content"]
+        st.session_state["messages"].append({"role": "assistant", "content": assistant_reply})
+        st.experimental_rerun()
     else:
-        st.error("File upload failed!")
-
-
+        st.error("Error communicating with OpenAI API. Check your API key and model ID.")
